@@ -1,0 +1,46 @@
+name: Flutter CI Manual
+
+on:
+  workflow_dispatch:  # Memungkinkan eksekusi manual dari tab Actions di GitHub
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.10.0'  # Sesuaikan dengan versi Flutter yang mendukung Dart 2.18.x
+          channel: 'stable'
+
+      - name: Debug Flutter Environment
+        run: flutter doctor -v  # Mengecek informasi SDK untuk debugging
+
+      - name: Cache Flutter Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Run Flutter Analyzer
+        run: flutter analyze
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4  # Ganti dari v3 ke v4
+        with:
+          name: release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          compression-level: 0  # Opsional: bisa disesuaikan untuk mempercepat upload
